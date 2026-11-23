@@ -188,11 +188,12 @@ resource "aws_iam_role_policy_attachment" "eks_service" {
 ##################
 # Track latest release for the given k8s version
 data "aws_ssm_parameter" "eks_ami_release_version" {
-  name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.main.version}/amazon-linux-2/recommended/release_version"
+  name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.main.version}/amazon-linux-2023/x86_64/standard/recommended/release_version"
 }
 
 resource "aws_eks_node_group" "main" {
   node_group_name = "udacity"
+  ami_type        = "AL2023_x86_64_STANDARD"
   cluster_name    = aws_eks_cluster.main.name
   version         = aws_eks_cluster.main.version
   node_role_arn   = aws_iam_role.node_group.arn
@@ -275,7 +276,7 @@ resource "aws_codebuild_project" "codebuild" {
 
   source {
     type            = "GITHUB"
-    location        = "https://github.com/your-org/your-repo"
+    location        = "https://github.com/kiran4329/movie-picture-cicd"
     git_clone_depth = 1
     buildspec       = "buildspec.yml"
   }
@@ -316,9 +317,15 @@ resource "aws_iam_user" "github_action_user" {
   name = "github-action-user"
 }
 
-resource "aws_iam_user_policy" "github_action_user_permission" {
-  user   = aws_iam_user.github_action_user.name
-  policy = data.aws_iam_policy_document.github_policy.json
+resource "aws_iam_policy" "github_action_user_permission" {
+  name        = "github-action-user-permission"
+  description = "Permissions for GitHub Actions deployment"
+  policy      = data.aws_iam_policy_document.github_policy.json
+}
+
+resource "aws_iam_user_policy_attachment" "github_action_user_permission" {
+  user       = aws_iam_user.github_action_user.name
+  policy_arn = aws_iam_policy.github_action_user_permission.arn
 }
 
 data "aws_iam_policy_document" "github_policy" {
