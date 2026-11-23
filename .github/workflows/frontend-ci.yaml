@@ -7,7 +7,6 @@ on:
     paths:
       - "starter/frontend/**"
       - ".github/workflows/frontend-ci.yaml"
-
   workflow_dispatch:
 
 jobs:
@@ -53,7 +52,7 @@ jobs:
 
       - name: Run tests
         working-directory: starter/frontend
-        run: CI=true npm test -- --watchAll=false
+        run: CI=true npm run test -- --watchAll=false
 
   build:
     name: Frontend Docker Build
@@ -64,6 +63,21 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: npm
+          cache-dependency-path: starter/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: starter/frontend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: starter/frontend
+        run: CI=true npm run test -- --watchAll=false
 
       - name: Build frontend Docker image
         working-directory: starter/frontend
